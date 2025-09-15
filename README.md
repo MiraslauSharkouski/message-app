@@ -17,4 +17,15 @@
 
 ## Запуск приложения
 
-(Будет добавлено позже)
+### С использованием Docker
+
+```bash
+# Запуск всех сервисов
+docker-compose up --build
+
+# Запуск в фоновом режиме
+docker-compose up -d --build
+
+# Остановка сервисов
+docker-compose down
+```
