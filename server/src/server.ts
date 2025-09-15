@@ -1,5 +1,10 @@
+import dotenv from "dotenv";
 import express from "express";
 import { Application } from "express";
+
+// @description: Загрузка переменных окружения из .env файла
+// @purpose: Конфигурация приложения через переменные окружения
+dotenv.config();
 
 class App {
   public app: Application;
@@ -32,5 +37,6 @@ class App {
   }
 }
 
-const app = new App(5000);
+const port = parseInt(process.env.PORT || "5000");
+const app = new App(port);
 app.listen();
