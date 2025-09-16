@@ -1,6 +1,6 @@
 // @description: Компонент формы отправки сообщения
 // @purpose: Реализация формы с валидацией с использованием react-hook-form
-import React from "react";
+import React, { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
 import {
@@ -20,8 +20,9 @@ interface IFormInputs {
 // @description: Пропсы компонента формы
 // @purpose: Типизация пропсов компонента
 interface MessageFormProps {
-  onSubmit: (data: IFormInputs) => void;
+  onSubmit: (data: IFormInputs) => Promise<void> | void;
   isSubmitting?: boolean;
+  onSuccess?: () => void;
   onCancel?: () => void;
 }
 
@@ -30,8 +31,16 @@ interface MessageFormProps {
 const MessageForm: React.FC<MessageFormProps> = ({
   onSubmit,
   isSubmitting = false,
+  onSuccess,
   onCancel,
 }) => {
+  // @description: Локальное состояние загрузки
+  // @purpose: Управление состоянием загрузки внутри компонента
+  const [isLoading, setIsLoading] = useState(false);
+  // @description: Состояние успешной отправки
+  // @purpose: Отображение сообщения об успехе
+  const [isSuccess, setIsSuccess] = useState(false);
+
   // @description: Инициализация react-hook-form
   // @purpose: Управление состоянием формы и валидацией
   const {
@@ -51,145 +60,269 @@ const MessageForm: React.FC<MessageFormProps> = ({
 
   // @description: Обработчик отправки формы
   // @purpose: Передача валидных данных родительскому компоненту
-  const onFormSubmit: SubmitHandler<IFormInputs> = (data) => {
-    onSubmit(data);
+  const onFormSubmit: SubmitHandler<IFormInputs> = async (data) => {
+    // @description: Установка состояния загрузки
+    // @purpose: Блокировка кнопки и отображение индикатора загрузки
+    setIsLoading(true);
+    setIsSuccess(false);
+
+    try {
+      // @description: Вызов обработчика отправки из пропсов
+      // @purpose: Передача данных родительскому компоненту
+      await onSubmit(data);
+
+      // @description: Установка состояния успеха
+      // @purpose: Отображение сообщения об успешной отправке
+      setIsSuccess(true);
+
+      // @description: Вызов обработчика успеха если передан
+      // @purpose: Дополнительная обработка успеха
+      if (onSuccess) {
+        onSuccess();
+      }
+
+      // @description: Автоматическая очистка формы через 3 секунды
+      // @purpose: Улучшение UX после успешной отправки
+      setTimeout(() => {
+        reset();
+        setIsSuccess(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Form submission error:", error);
+      // @description: Ошибка будет обработана в родительском компоненте
+    } finally {
+      // @description: Сброс состояния загрузки
+      // @purpose: Разблокировка кнопки
+      setIsLoading(false);
+    }
   };
 
   // @description: Очистка формы
   // @purpose: Сброс значений полей формы
   const handleReset = () => {
     reset();
+    setIsSuccess(false);
+  };
+
+  // @description: Обработчик отмены
+  // @purpose: Очистка состояния и вызов обработчика отмены
+  const handleCancel = () => {
+    reset();
+    setIsSuccess(false);
+    if (onCancel) {
+      onCancel();
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-      {/* @description: Поле ввода имени */}
-      {/* @purpose: Сбор имени пользователя с валидацией */}
-      <div className="form-group">
-        <label htmlFor="name" className="form-label">
-          Имя <span className="text-red-500">*</span>
-        </label>
-        <input
-          id="name"
-          {...register("name", {
-            validate: validateName,
-          })}
-          className={`form-input ${errors.name ? "form-input-error" : ""}`}
-          placeholder="Введите ваше имя"
-          disabled={isSubmitting}
-        />
-        {errors.name && <div className="form-error">{errors.name.message}</div>}
-      </div>
-
-      {/* @description: Поле ввода телефона */}
-      {/* @purpose: Сбор номера телефона пользователя с валидацией */}
-      <div className="form-group">
-        <label htmlFor="phone" className="form-label">
-          Телефон <span className="text-red-500">*</span>
-        </label>
-        <input
-          id="phone"
-          type="tel"
-          {...register("phone", {
-            validate: validatePhone,
-          })}
-          className={`form-input ${errors.phone ? "form-input-error" : ""}`}
-          placeholder="+375XXYYYYYYY или 80XXYYYYYYY"
-          disabled={isSubmitting}
-        />
-        {errors.phone && (
-          <div className="form-error">{errors.phone.message}</div>
-        )}
-        <p className="text-sm text-gray-500 mt-1">
-          Пример: +375291234567 или 80291234567
-        </p>
-      </div>
-
-      {/* @description: Поле ввода сообщения */}
-      {/* @purpose: Сбор текста сообщения с валидацией */}
-      <div className="form-group">
-        <label htmlFor="message" className="form-label">
-          Сообщение <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          id="message"
-          {...register("message", {
-            validate: validateMessage,
-          })}
-          rows={5}
-          className={`form-input ${errors.message ? "form-input-error" : ""}`}
-          placeholder="Введите ваше сообщение"
-          disabled={isSubmitting}
-        />
-        {errors.message && (
-          <div className="form-error">{errors.message.message}</div>
-        )}
-      </div>
-
-      {/* @description: Кнопки формы */}
-      {/* @purpose: Управление отправкой и отменой */}
-      <div className="flex flex-col sm:flex-row gap-4 pt-4">
-        <button
-          type="submit"
-          className={`btn btn-primary flex-1 ${
-            isSubmitting ? "btn-disabled" : ""
-          }`}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
+    <div className="space-y-6">
+      {/* @description: Сообщение об успехе */}
+      {/* @purpose: Отображение положительной обратной связи */}
+      {isSuccess && (
+        <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
               <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block"
+                className="h-5 w-5 text-green-400"
                 xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
+                viewBox="0 0 20 20"
+                fill="currentColor"
               >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
                 <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
-              Отправка...
-            </>
-          ) : (
-            "Отправить сообщение"
-          )}
-        </button>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-green-800">
+                Сообщение успешно отправлено!
+              </h3>
+              <div className="mt-2 text-sm text-green-700">
+                <p>
+                  Ваше сообщение было успешно сохранено. Форма будет очищена
+                  автоматически.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-        {onCancel && (
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+        {/* @description: Поле ввода имени */}
+        {/* @purpose: Сбор имени пользователя с валидацией */}
+        <div className="form-group">
+          <label htmlFor="name" className="form-label">
+            Имя <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="name"
+            {...register("name", {
+              validate: validateName,
+            })}
+            className={`form-input ${errors.name ? "form-input-error" : ""}`}
+            placeholder="Введите ваше имя"
+            disabled={isLoading || isSubmitting}
+          />
+          {errors.name && (
+            <div className="form-error flex items-center mt-1">
+              <svg
+                className="h-4 w-4 text-red-500 mr-1"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {errors.name.message}
+            </div>
+          )}
+        </div>
+
+        {/* @description: Поле ввода телефона */}
+        {/* @purpose: Сбор номера телефона пользователя с валидацией */}
+        <div className="form-group">
+          <label htmlFor="phone" className="form-label">
+            Телефон <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            {...register("phone", {
+              validate: validatePhone,
+            })}
+            className={`form-input ${errors.phone ? "form-input-error" : ""}`}
+            placeholder="+375XXYYYYYYY или 80XXYYYYYYY"
+            disabled={isLoading || isSubmitting}
+          />
+          {errors.phone && (
+            <div className="form-error flex items-center mt-1">
+              <svg
+                className="h-4 w-4 text-red-500 mr-1"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {errors.phone.message}
+            </div>
+          )}
+          <p className="text-sm text-gray-500 mt-1">
+            Пример: +375291234567 или 80291234567
+          </p>
+        </div>
+
+        {/* @description: Поле ввода сообщения */}
+        {/* @purpose: Сбор текста сообщения с валидацией */}
+        <div className="form-group">
+          <label htmlFor="message" className="form-label">
+            Сообщение <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            id="message"
+            {...register("message", {
+              validate: validateMessage,
+            })}
+            rows={5}
+            className={`form-input ${errors.message ? "form-input-error" : ""}`}
+            placeholder="Введите ваше сообщение"
+            disabled={isLoading || isSubmitting}
+          />
+          {errors.message && (
+            <div className="form-error flex items-center mt-1">
+              <svg
+                className="h-4 w-4 text-red-500 mr-1"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {errors.message.message}
+            </div>
+          )}
+        </div>
+
+        {/* @description: Кнопки формы */}
+        {/* @purpose: Управление отправкой и отменой */}
+        <div className="flex flex-col sm:flex-row gap-4 pt-4">
+          <button
+            type="submit"
+            className={`btn btn-primary flex-1 flex items-center justify-center ${
+              isLoading || isSubmitting ? "btn-disabled" : ""
+            }`}
+            disabled={isLoading || isSubmitting}
+          >
+            {isLoading || isSubmitting ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Отправка...
+              </>
+            ) : (
+              "Отправить сообщение"
+            )}
+          </button>
+
+          {onCancel && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="btn btn-secondary"
+              disabled={isLoading || isSubmitting}
+            >
+              Отмена
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={onCancel}
+            onClick={handleReset}
             className="btn btn-secondary"
-            disabled={isSubmitting}
+            disabled={isLoading || isSubmitting}
           >
-            Отмена
+            Очистить
           </button>
-        )}
-
-        <button
-          type="button"
-          onClick={handleReset}
-          className="btn btn-secondary"
-          disabled={isSubmitting}
-        >
-          Очистить
-        </button>
-      </div>
+        </div>
+      </form>
 
       {/* @description: DevTools для разработки */}
       {/* @purpose: Визуализация состояния формы в режиме разработки */}
       {process.env.NODE_ENV === "development" && <DevTool control={control} />}
-    </form>
+    </div>
   );
 };
 
