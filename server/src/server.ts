@@ -7,6 +7,24 @@ import routes from "./routes";
 // @purpose: Конфигурация приложения через переменные окружения
 dotenv.config();
 
+// @description: Глобальный обработчик ошибок
+// @purpose: Централизованная обработка необработанных ошибок
+const errorHandler = (
+  err: Error,
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  console.error("Unhandled error:", err);
+
+  // @description: Возврат стандартизированного ответа об ошибке
+  // @purpose: Предотвратить утечку информации о внутренней структуре приложения
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
+  });
+};
+
 class App {
   public app: Application;
   public port: number;
@@ -17,6 +35,7 @@ class App {
 
     this.initializeMiddlewares();
     this.initializeRoutes();
+    this.initializeErrorHandling();
   }
 
   private initializeMiddlewares(): void {
@@ -27,6 +46,13 @@ class App {
     // @description: Middleware для парсинга URL-encoded данных
     // @purpose: Поддержка данных формы
     this.app.use(express.urlencoded({ extended: true }));
+
+    // @description: Middleware для логирования запросов
+    // @purpose: Отслеживание входящих запросов для отладки
+    this.app.use((req, res, next) => {
+      console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+      next();
+    });
 
     // @description: Middleware для CORS (временно для разработки)
     // @purpose: Разрешение запросов с разных доменов
@@ -51,6 +77,12 @@ class App {
     // @description: Подключение всех API маршрутов
     // @base_path: /api
     this.app.use("/api", routes);
+  }
+
+  private initializeErrorHandling(): void {
+    // @description: Регистрация глобального обработчика ошибок
+    // @purpose: Перехват необработанных ошибок
+    this.app.use(errorHandler);
   }
 
   public listen(): void {
