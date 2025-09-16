@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* @description: Базовые стили для всего приложения */
 /* @purpose: Единый стиль и улучшенная читаемость */
@@ -24,6 +22,7 @@ code {
 
 /* @description: Стили для контейнеров */
 /* @purpose: Центрирование и ограничение ширины контента */
+
 .container {
   @apply max-w-4xl mx-auto px-4;
 }
