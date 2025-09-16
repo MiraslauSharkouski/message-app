@@ -15,6 +15,18 @@
 - **База данных**: PostgreSQL
 - **Инфраструктура**: Docker, docker-compose
 
+## API Endpoints
+
+### Messages
+
+- `POST /api/messages` - Создание нового сообщения
+- `GET /api/messages` - Получение всех сообщений
+- `GET /api/messages/:id` - Получение сообщения по ID
+
+### Health Check
+
+- `GET /api/health` - Проверка состояния API
+
 ## Запуск приложения
 
 ### С использованием Docker
