@@ -22,7 +22,6 @@ code {
 
 /* @description: Стили для контейнеров */
 /* @purpose: Центрирование и ограничение ширины контента */
-
 .container {
   @apply max-w-4xl mx-auto px-4;
 }
@@ -73,6 +72,12 @@ code {
   @apply text-red-600 text-sm mt-1;
 }
 
+/* @description: Стили для textarea */
+/* @purpose: Единый стиль для текстовых полей */
+textarea.form-input {
+  @apply resize-y min-h-[100px];
+}
+
 /* @description: Стили для заголовков */
 /* @purpose: Единый стиль для заголовков */
 .page-title {
@@ -81,4 +86,32 @@ code {
 
 .section-title {
   @apply text-xl font-semibold text-gray-800 mb-4;
+}
+
+/* @description: Стили для спиннера загрузки */
+/* @purpose: Визуальная индикация загрузки */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* @description: Адаптивные утилиты */
+/* @purpose: Улучшенная адаптивность приложения */
+@media (max-width: 768px) {
+  .container {
+    @apply px-4;
+  }
+
+  .card {
+    @apply p-4;
+  }
+
+  .page-title {
+    @apply text-xl mb-4;
+  }
 }
