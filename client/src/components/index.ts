@@ -1,4 +1,4 @@
 // @description: Экспорт всех компонентов
 // @purpose: Упрощение импорта компонентов в других частях приложения
 
-// Пока пусто, будет заполнено позже
+export { default as MessageForm } from "./MessageForm";
