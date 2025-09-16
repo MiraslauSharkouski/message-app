@@ -20,7 +20,7 @@ interface IFormInputs {
 // @description: Пропсы компонента формы
 // @purpose: Типизация пропсов компонента
 interface MessageFormProps {
-  onSubmit: (data: IFormInputs) => Promise<void> | void;
+  onSubmit: (data: IFormInputs) => Promise<void>;
   isSubmitting?: boolean;
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -89,7 +89,7 @@ const MessageForm: React.FC<MessageFormProps> = ({
       }, 3000);
     } catch (error) {
       console.error("Form submission error:", error);
-      // @description: Ошибка будет обработана в родительском компоненте
+      // @description: Ошибка будет отображена через родительский компонент
     } finally {
       // @description: Сброс состояния загрузки
       // @purpose: Разблокировка кнопки
@@ -119,7 +119,7 @@ const MessageForm: React.FC<MessageFormProps> = ({
       {/* @description: Сообщение об успехе */}
       {/* @purpose: Отображение положительной обратной связи */}
       {isSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+        <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6 fade-in">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg

@@ -4,14 +4,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageForm } from "../components";
 import { useFormSubmit } from "../hooks";
-
-// @description: Интерфейс для данных формы
-// @purpose: Типизация данных формы
-interface IFormInputs {
-  name: string;
-  phone: string;
-  message: string;
-}
+import {
+  messageService,
+  type ICreateMessage,
+} from "../services/messageService";
 
 // @description: Компонент страницы формы
 // @purpose: Отображение формы и обработка отправки
@@ -23,19 +19,7 @@ const FormPage: React.FC = () => {
   // @description: Хук для управления отправкой формы
   // @purpose: Централизованное управление состоянием отправки
   const { isSubmitting, submitError, handleSubmit, reset } =
-    useFormSubmit<IFormInputs>(async (data) => {
-      // @description: Здесь будет логика отправки данных на сервер
-      // @purpose: Сохранение сообщения в базе данных
-      console.log("Form submitted:", data);
-
-      // @description: Симуляция отправки данных
-      // @purpose: Демонстрация UX во время загрузки
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // @description: В реальном приложении здесь будет вызов API
-      // @purpose: Отправка данных на сервер
-      // await messageService.sendMessage(data);
-    });
+    useFormSubmit<ICreateMessage>();
 
   // @description: Обработчик клика по кнопке "Назад"
   // @purpose: Переход к странице приветствия
@@ -122,7 +106,7 @@ const FormPage: React.FC = () => {
           {/* @description: Компонент формы сообщения */}
           {/* @purpose: Реализация формы с валидацией */}
           <MessageForm
-            onSubmit={handleSubmit}
+            onSubmit={(data) => messageService.sendMessage(data)}
             isSubmitting={isSubmitting}
             onSuccess={handleSuccess}
             onCancel={handleCancel}

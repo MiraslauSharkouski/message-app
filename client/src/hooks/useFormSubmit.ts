@@ -1,6 +1,10 @@
 // @description: Хук для отправки формы
 // @purpose: Централизованная логика отправки данных формы
 import { useState } from "react";
+import {
+  messageService,
+  type ICreateMessage,
+} from "../services/messageService";
 
 // @description: Тип для функции отправки данных
 // @purpose: Типизация функции отправки
@@ -17,8 +21,8 @@ interface UseFormSubmitResult<T> {
 
 // @description: Хук для управления отправкой формы
 // @purpose: Управление состоянием загрузки и ошибок при отправке
-export const useFormSubmit = <T>(
-  submitFunction: SubmitFunction<T>
+export const useFormSubmit = <T extends ICreateMessage>(
+  submitFunction?: SubmitFunction<T>
 ): UseFormSubmitResult<T> => {
   // @description: Состояние загрузки
   // @purpose: Отслеживание процесса отправки
@@ -40,9 +44,15 @@ export const useFormSubmit = <T>(
     setIsSubmitting(true);
 
     try {
-      // @description: Вызов функции отправки
+      // @description: Вызов функции отправки или стандартного сервиса
       // @purpose: Передача данных для обработки
-      await submitFunction(data);
+      if (submitFunction) {
+        await submitFunction(data);
+      } else {
+        // @description: Использование стандартного сервиса сообщений
+        // @purpose: Отправка данных через messageService
+        await messageService.sendMessage(data);
+      }
     } catch (error) {
       // @description: Обработка ошибок отправки
       // @purpose: Отображение сообщения об ошибке пользователю
