@@ -35,9 +35,11 @@ const MessageForm: React.FC<MessageFormProps> = ({
   // @description: Локальное состояние загрузки
   // @purpose: Управление состоянием загрузки внутри компонента
   const [isLoading, setIsLoading] = useState(false);
+
   // @description: Состояние успешной отправки
   // @purpose: Отображение сообщения об успехе
   const [isSuccess, setIsSuccess] = useState(false);
+
   // @description: Состояние ошибки
   // @purpose: Хранение сообщения об ошибке
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -50,8 +52,9 @@ const MessageForm: React.FC<MessageFormProps> = ({
     formState: { errors },
     control,
     reset,
+    // trigger, // @description: Функция для ручного запуска валидации (удалена так как не используется)
   } = useForm<IFormInputs>({
-    mode: "onBlur", // @description: Валидация при потере фокуса
+    mode: "onBlur", // @description: Валидация при потере фокуса вместо onChange
     defaultValues: {
       name: "",
       phone: "",
